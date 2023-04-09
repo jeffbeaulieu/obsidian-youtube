@@ -14,10 +14,16 @@
         "sourceType": "module"
     },
     "rules": {
-      "no-unused-vars": "off",
+      "no-console": "warn",
+      "no-multi-spaces": ["error"],
+      "no-unused-vars": "error",
       "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
+      "prefer-const": "error",
+      "semi": ["error", "always"],
+      "indent": ["error", 2],
       "@typescript-eslint/ban-ts-comment": "off",
-      "no-prototype-builtins": "off",
-      "@typescript-eslint/no-empty-function": "off"
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-explicit-any": "error",
+      "no-prototype-builtins": "off"
     } 
   }
