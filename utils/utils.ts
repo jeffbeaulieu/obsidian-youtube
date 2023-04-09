@@ -11,7 +11,7 @@ export function getVideoId(url: string): string {
 }
 
 export function replaceIllegalFileNameCharacters(text: string) {
-  return text.replace(/[\\,#%&{}/*<>$":@.?]/g, '').replace(/\s+/g, ' ');
+  return text.replaceAll(/[\\,#%&{}/*<>$":@.?|]/g, '').replaceAll(/\s+/g, ' ');
 }
 
 // Function to convert duration to minutes
