@@ -39,10 +39,6 @@ jobs:
           release_name: ${{ github.ref }}
           draft: false
           prerelease: false
-      - name: Generate Release Notes
-        uses: github/scripts-to-rule-them-all@main
-        with:
-          script: changelog
       - name: Upload zip file
         id: upload-zip
         uses: actions/upload-release-asset@v1
