@@ -2,7 +2,7 @@ import { GoogleYoutubeApi } from 'apis/GoogleYoutubeApi';
 import ObsidianYoutubePlugin from 'main';
 import { GoogleYoutubeResponse } from 'models/GoogleYoutubeResponse';
 import { Notice, TFile } from 'obsidian';
-import { convertYouTubeVideoDurationToMinutes, generateYoutubeVideoIframe, replaceIllegalFileNameCharacters } from './utils';
+import { convertYouTubeVideoDurationToMinutes, generateYoutubeVideoIframe, removeTags, replaceIllegalFileNameCharacters } from './utils';
 
 export class YoutubeNote {
   plugin: ObsidianYoutubePlugin;
@@ -60,7 +60,7 @@ export class YoutubeNote {
     const variables: { [key: string]: string } = {
       '{{videoId}}': this.videoId,
       '{{title}}': googleYoutubeResponse.title,
-      '{{description}}': googleYoutubeResponse.description,
+      '{{description}}': this.plugin.settings.removeTagsFromDescription === 'true' ? removeTags(googleYoutubeResponse.description) : googleYoutubeResponse.description,
       '{{duration}}': convertYouTubeVideoDurationToMinutes(googleYoutubeResponse.duration),
       '{{videoUrl}}': `https://www.youtube.com/watch?v=${this.videoId}`,
       '{{thumbnailUrl}}': googleYoutubeResponse.thumbnailUrl,
