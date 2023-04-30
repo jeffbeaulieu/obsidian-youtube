@@ -13,6 +13,7 @@ export class GoogleYoutubeApi {
     return this.mapResponseToModel(response);
   }
 
+  // Get video info from YouTube API
   private async getVideoInfosFromAPI(id: string): Promise<RequestUrlResponse> {
     if (!this.settings.apiKey) {
       throw new Error('API key is empty');
@@ -36,8 +37,9 @@ export class GoogleYoutubeApi {
         throw new Error('Failed to get video info from YouTube API');
       }
     });
-  }
+  }    
 
+  // Map response to model
   private mapResponseToModel(response: RequestUrlResponse): GoogleYoutubeResponse {
     const data = response.json;
     const video = data.items[0];

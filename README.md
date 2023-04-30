@@ -8,11 +8,12 @@ Use the command "Create new YouTube note" to open the search window, where you c
 
 There are various settings under the plugin settings you can use to personalize your workflow, here are some important ones:
 
-| Setting             | Decsription                                                                                                                            |
-| :------------------ | :------------------------------------------------------------------------------------------------------------------------------------- |
-| API Key             | Your YouTube API Key. See [YouTube API documentation](https://developers.google.com/youtube/v3/getting-started) to request an API Key. |
-| Video Notes Folder  | Folder where the video notes will be created                                                                                           |
-| Video Note Template | Template used for the note creation. See the [Templating](#templating) section for more details.                                       |
+| Setting                      | Decsription                                                                                                                            |
+| :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| API Key                      | Your YouTube API Key. See [YouTube API documentation](https://developers.google.com/youtube/v3/getting-started) to request an API Key. |
+| Video Notes Folder           | Folder where the video notes will be created                                                                                           |
+| Video Note Template          | Template used for the note creation. See the [Templating](#templating) section for more details.                                       |
+| Remove Tags From Description | Remove tags from youtube video description before inserting description variable in note                                               |
 
 ## Templating
 

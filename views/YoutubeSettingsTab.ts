@@ -54,5 +54,19 @@ export class YouTubeSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    new Setting(containerEl)
+      .setName('Remove Tags From Description')
+      .setDesc('Remove tags from youtube video description before inserting description variable in note')    
+      .addToggle(async (toggle) => {
+        toggle
+          .setValue(this.plugin.settings.removeTagsFromDescription === 'true')
+          .onChange(async (value) => {
+            this.plugin.settings.removeTagsFromDescription = String(value);
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
+
   }
 }

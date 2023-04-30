@@ -36,3 +36,8 @@ export function convertYouTubeVideoDurationToMinutes(duration: string): string {
 export function generateYoutubeVideoIframe(videoId: string): string {
   return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
 }
+
+// Remove tags from text
+export function removeTags(text: string): string {
+  return text.replaceAll(/#[A-Za-z0-9]+\b/g, '');
+}
