@@ -17,7 +17,7 @@ export class YouTubeSettingTab extends PluginSettingTab {
     containerEl.createEl('h2', { text: 'General Settings' });
 
     new Setting(containerEl)
-      .setName('API Key')
+      .setName('Youtube API Key')
       .setDesc('Your YouTube API Key')
       .addText(text =>
         text
@@ -68,5 +68,71 @@ export class YouTubeSettingTab extends PluginSettingTab {
           });
       });
 
+    containerEl.createEl('h2', { text: 'AI Settings' });
+
+    new Setting(containerEl)
+      .setName('OpenAI API Key')
+      .setDesc('Your OpenAI API Key')
+      .addText(text =>
+        text
+          .setPlaceholder('Your OpenAI API Key')
+          .setValue(this.plugin.settings.openAIAPIKey)
+          .onChange(async value => {
+            this.plugin.settings.openAIAPIKey = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName('OpenAI Base Path')
+      .setDesc('OpenAI Base path')
+      .addText(text =>
+        text
+          .setPlaceholder('Your Open-ai Base path')
+          .setValue(this.plugin.settings.openaiBasePath || 'https://api.openai.com/v1')
+          .onChange(async value => {
+            this.plugin.settings.openaiBasePath = value.replace(/\/+$/, "");
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName('OpenAI Model')
+      .setDesc('Model to use for OpenAI API')
+      .addText(text =>
+        text
+          .setPlaceholder('gpt-4o')
+          .setValue(this.plugin.settings.openAIModel)
+          .onChange(async value => {
+            this.plugin.settings.openAIModel = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName('Get Caption Summary from OpenAI API')
+      .setDesc('Add a caption summary to the video note')    
+      .addToggle(async (toggle) => {
+        toggle
+          .setValue(this.plugin.settings.summary === 'true')
+          .onChange(async (value) => {
+            this.plugin.settings.summary = String(value);
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Summary Prompt')
+      .setDesc('Prompt used for generating the summary')
+      .addTextArea(text =>
+        text
+          .setPlaceholder('Enter your summary prompt')
+          .setValue(this.plugin.settings.summaryPrompt)
+          .onChange(async value => {
+            this.plugin.settings.summaryPrompt = value;
+            await this.plugin.saveSettings();
+          })
+      );
   }
 }

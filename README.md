@@ -32,6 +32,8 @@ The plugin will replace the following variables in the template:
 | `channel` | Channel name for the video |
 | `channelUrl` | URL to the channel |
 | `channelThumbnailUrl` | URL to the channel thumbnail image |
+| `caption` | Caption for the video |
+| `summary` | Summary for the video |
 
 ## Installation
 

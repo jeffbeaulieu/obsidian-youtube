@@ -1,62 +1,114 @@
-import { GoogleYoutubeApi } from 'apis/GoogleYoutubeApi';
 import ObsidianYoutubePlugin from 'main';
 import { GoogleYoutubeResponse } from 'models/GoogleYoutubeResponse';
 import { Notice, TFile } from 'obsidian';
 import { convertYouTubeVideoDurationToMinutes, generateYoutubeVideoIframe, removeTags, replaceIllegalFileNameCharacters } from './utils';
+import { YoutubeTranscript } from '../helpers/YoutubeTranscript';
+import { GoogleYoutubeApi } from 'apis/GoogleYoutubeApi';
+import { Summarizer } from 'utils/Summarizer';
 
 export class YoutubeNote {
+  googleYoutubeApi: GoogleYoutubeApi;
+  summarizer: Summarizer;
   plugin: ObsidianYoutubePlugin;
   content = '';
   title = '';
   filepath: string;
   videoId: string;
-  googleYoutubeApi: GoogleYoutubeApi;
+  caption = '';
+  summary = '';
 
   constructor(plugin: ObsidianYoutubePlugin, videoId: string) {
     this.plugin = plugin;
     this.googleYoutubeApi = new GoogleYoutubeApi(this.plugin.settings);
+    this.summarizer = new Summarizer(this.plugin.settings);
     this.videoId = videoId;
   }
 
   async createNote(): Promise<TFile> {
-    const googleYoutubeResponse = await this.googleYoutubeApi.getVideoInfos(this.videoId).catch(error => {throw error;});
-    this.content = await this.getTemplate().catch(error => {throw error;});   
-    this.content = this.fill(googleYoutubeResponse);
-    this.title = replaceIllegalFileNameCharacters(googleYoutubeResponse.title) + ' - ' + replaceIllegalFileNameCharacters(googleYoutubeResponse.channel);
+    try {
+      new Notice(`Creating note for YouTube video: ${this.videoId}`);
 
-    if (this.plugin.settings.folder === '') {
-      throw new Error('Destination folder is not defined in settings');
-    }  
-    
-    const folderExists = await this.plugin.app.vault.adapter.exists(this.plugin.settings.folder).catch(error => {throw error;});
-    if (!folderExists) {
-      throw new Error(`Folder does not exist: ${this.plugin.settings.folder}`);
-    } 
+      const [googleYoutubeResponse, transcript] = await Promise.all([
+        this.googleYoutubeApi.getVideoInfos(this.videoId),
+        this.getTranscript()
+      ]);
 
-    this.filepath = `${this.plugin.settings.folder}/${this.title}.md`;
-        
-    // Valid if note already exists
-    const exists = await this.plugin.app.vault.adapter.exists(this.filepath).catch(error => {throw error;});
-    if (exists) {
-      throw new Error(`Note already exists in destination folder: ${this.plugin.settings.folder}`);
+      this.caption = transcript;
+
+      if (this.plugin.settings.summary === 'true' && this.caption && this.caption.trim() !== '') {
+        this.summary = await this.getSummary();
+      } 
+
+      const template = await this.getTemplate();
+      this.content = await this.fill(template, googleYoutubeResponse);
+      this.title = replaceIllegalFileNameCharacters(googleYoutubeResponse.title) + ' - ' + replaceIllegalFileNameCharacters(googleYoutubeResponse.channel);
+
+      if (!this.plugin.settings.folder) {
+        throw new Error('Destination folder is not defined in settings');
+      }
+
+      const folderExists = await this.plugin.app.vault.adapter.exists(this.plugin.settings.folder);
+      if (!folderExists) {
+        throw new Error(`Folder does not exist: ${this.plugin.settings.folder}`);
+      }
+
+      this.filepath = `${this.plugin.settings.folder}/${this.title}.md`;
+
+      const exists = await this.plugin.app.vault.adapter.exists(this.filepath);
+      if (exists) {
+        throw new Error(`Note already exists in destination folder: ${this.plugin.settings.folder}`);
+      }
+
+      const newFile = await this.plugin.app.vault.create(this.filepath, this.content);
+      new Notice(`Note created: ${this.title}`);
+
+      return newFile;
+    } catch (error) {
+      new Notice(`Error creating note: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
     }
-
-    const newFile = this.plugin.app.vault.create(this.filepath, this.content).catch(error => {throw error;});
-    new Notice(`Note created: ${this.title}`);
-
-    return newFile;
   }
 
   private async getTemplate(): Promise<string> {
-    if (this.plugin.settings.template === '') {
+    if (!this.plugin.settings.template) {
       throw new Error('Template is not defined in settings');
     }
 
-    const template = await this.plugin.app.vault.adapter.read(`${this.plugin.settings.template}.md`);
-    return template;
+    return await this.plugin.app.vault.adapter.read(`${this.plugin.settings.template}.md`);
   }
 
-  private fill(googleYoutubeResponse: GoogleYoutubeResponse): string {
+  private async getTranscript(): Promise<string> {
+    try {
+      if (!this.videoId) {
+        throw new Error('Video ID is undefined or empty');
+      }
+
+      const transcript = await YoutubeTranscript.fetchTranscript(this.videoId);
+
+      if (!transcript || transcript.length === 0) {
+        throw new Error('Processed transcript is empty');
+      }
+
+      const transcriptText = transcript.map(item => item.text).join('\n');
+      return transcriptText;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      new Notice('Error fetching transcript: ' + errorMessage);
+      return '';
+    }
+  }
+
+  private async getSummary(): Promise<string> {
+    try {
+      const summary = await this.summarizer.summarize(this.caption);
+      return summary;
+    } catch (error) {
+      new Notice(`Error generating summary: ${error instanceof Error ? error.message : String(error)}`);
+      return '';
+    }
+  }
+
+  private async fill(template: string, googleYoutubeResponse: GoogleYoutubeResponse): Promise<string> {
     const variables: { [key: string]: string } = {
       '{{videoId}}': this.videoId,
       '{{title}}': googleYoutubeResponse.title,
@@ -70,10 +122,11 @@ export class YoutubeNote {
       '{{channelUrl}}': `https://www.youtube.com/channel/${googleYoutubeResponse.channelId}`,
       '{{channelThumbnailUrl}}': googleYoutubeResponse.channelThumbnailUrl,
       '{{tags}}': googleYoutubeResponse.tags,
+      '{{caption}}': this.caption,
+      '{{summary}}': this.summary,
     };
-    Object.keys(variables).forEach(key => {
-      this.content = this.content.replaceAll(key, variables[key]);
-    });
-    return this.content;
+
+    return Object.entries(variables).reduce((content, [key, value]) => 
+      content.replaceAll(key, value), template);
   }
 }

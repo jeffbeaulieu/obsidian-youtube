@@ -26,5 +26,11 @@
     "prettier": "2.8.7",
     "tslib": "2.4.0",
     "typescript": "^5.0.3"
+  },
+  "dependencies": {
+    "gpt3-tokenizer": "^1.1.5",
+    "openai": "^3.3.0",
+    "tiktoken": "^1.0.10",
+    "youtube-transcript": "^1.0.6"
   }
 }

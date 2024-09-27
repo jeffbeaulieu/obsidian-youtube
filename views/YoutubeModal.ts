@@ -35,6 +35,15 @@ export class YouTubeModal extends Modal {
           this.createYouTubeNote();
         }));
     });
+
+    new Setting(contentEl).addButton(btn => {
+      return (this.okBtnRef = btn
+        .setButtonText('Create Note and Add')
+        .setCta()
+        .onClick(() => {
+          this.createYouTubeNoteAndAdd();
+        }));
+    });
   }
 
   async createYouTubeNote() {
@@ -42,22 +51,31 @@ export class YouTubeModal extends Modal {
     if (this.videoId) {
       const youtubeNote = new YoutubeNote(this.plugin, this.videoId);
       
+      const newFile = await youtubeNote.createNote().catch(error => { throw error; });
+      this.close();
+      // open file
+      const activeLeaf = this.app.workspace.getLeaf();
+      if (activeLeaf) {
+        await activeLeaf.openFile(newFile, { state: { mode: 'source' } });
+        activeLeaf.setEphemeralState({ rename: 'all' });
+      }
+      
+    } else {
+      throw new Error('Invalid YouTube URL or ID');
+    }
+  }
+
+  async createYouTubeNoteAndAdd() {
+    this.videoId = getVideoId(this.query);
+    if (this.videoId) {
       try {
-        const newFile = await youtubeNote.createNote().catch(error => { throw error; });
-        this.close();
-        // open file
-        const activeLeaf = this.app.workspace.getLeaf();
-        if (activeLeaf) {
-          await activeLeaf.openFile(newFile, { state: { mode: 'source' } });
-          activeLeaf.setEphemeralState({ rename: 'all' });
-        }
+        await this.createYouTubeNote();
+        this.query = "";
+        this.open();
       }
       catch (error) {
         new Notice(error.message);
       }
-      
-    } else {
-      new Notice('Invalid YouTube URL or ID');
     }
   }
 
