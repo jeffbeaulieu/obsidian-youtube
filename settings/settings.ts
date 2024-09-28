@@ -8,6 +8,7 @@ export interface ObsidianYoutubePluginSettings {
   openaiBasePath: string;
   openAIModel: string;
   summaryPrompt: string;
+  tubeArchivistBaseUrl: string;
 }
 
 export const DEFAULT_SETTINGS: ObsidianYoutubePluginSettings = {
@@ -20,4 +21,5 @@ export const DEFAULT_SETTINGS: ObsidianYoutubePluginSettings = {
   openaiBasePath: '',
   openAIModel: 'gpt-4o',
   summaryPrompt: "You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown. Summarize the following capture from a youtube video, extractiong  ideas, strategies, and thinking from this video transcript: \n\n",
+  tubeArchivistBaseUrl: '',
 };

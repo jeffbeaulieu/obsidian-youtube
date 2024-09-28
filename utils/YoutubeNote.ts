@@ -17,11 +17,31 @@ export class YoutubeNote {
   caption = '';
   summary = '';
 
-  constructor(plugin: ObsidianYoutubePlugin, videoId: string) {
+  constructor(plugin: ObsidianYoutubePlugin, videoIdOrUrl: string) {
     this.plugin = plugin;
     this.googleYoutubeApi = new GoogleYoutubeApi(this.plugin.settings);
     this.summarizer = new Summarizer(this.plugin.settings);
-    this.videoId = videoId;
+    this.videoId = this.extractVideoId(videoIdOrUrl);
+  }
+
+  private extractVideoId(videoIdOrUrl: string): string {
+    // Check if it's a TubeArchivist URL
+    if (this.plugin.settings.tubeArchivistBaseUrl && videoIdOrUrl.startsWith(this.plugin.settings.tubeArchivistBaseUrl)) {
+      const match = videoIdOrUrl.match(/\/video\/([^/]+)/);
+      if (match) {
+        return match[1];
+      }
+    }
+    // If not a TubeArchivist URL, assume it's a regular YouTube video ID or URL
+    const match = videoIdOrUrl.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=)?(.+)/);
+    return match ? match[1] : videoIdOrUrl;
+  }
+
+  private generateTubeArchivistUrl(): string {
+    if (this.plugin.settings.tubeArchivistBaseUrl) {
+      return `${this.plugin.settings.tubeArchivistBaseUrl}/video/${this.videoId}`;
+    }
+    return `https://www.youtube.com/watch?v=${this.videoId}`;
   }
 
   async createNote(): Promise<TFile> {
@@ -115,6 +135,7 @@ export class YoutubeNote {
       '{{description}}': this.plugin.settings.removeTagsFromDescription === 'true' ? removeTags(googleYoutubeResponse.description) : googleYoutubeResponse.description,
       '{{duration}}': convertYouTubeVideoDurationToMinutes(googleYoutubeResponse.duration),
       '{{videoUrl}}': `https://www.youtube.com/watch?v=${this.videoId}`,
+      '{{tubearchivistUrl}}': this.generateTubeArchivistUrl(),
       '{{thumbnailUrl}}': googleYoutubeResponse.thumbnailUrl,
       '{{publishedAt}}': googleYoutubeResponse.publishedAt,
       '{{embedVideo}}': generateYoutubeVideoIframe(this.videoId),

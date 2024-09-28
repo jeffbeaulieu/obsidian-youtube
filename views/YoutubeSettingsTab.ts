@@ -68,6 +68,19 @@ export class YouTubeSettingTab extends PluginSettingTab {
           });
       });
 
+    new Setting(containerEl)
+      .setName('TubeArchivist Base URL')
+      .setDesc('Base URL for your TubeArchivist instance (e.g., http://localhost:8000)')
+      .addText(text =>
+        text
+          .setPlaceholder('TubeArchivist Base URL')
+          .setValue(this.plugin.settings.tubeArchivistBaseUrl)
+          .onChange(async value => {
+            this.plugin.settings.tubeArchivistBaseUrl = value.replace(/\/+$/, "");
+            await this.plugin.saveSettings();
+          }),
+      );
+
     containerEl.createEl('h2', { text: 'AI Settings' });
 
     new Setting(containerEl)

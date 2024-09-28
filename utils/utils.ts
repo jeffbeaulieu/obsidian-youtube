@@ -1,13 +1,24 @@
 export function getVideoId(url: string): string {
-  const regex = new RegExp(
+  // Check if it's a TubeArchivist URL
+  const tubeArchivistRegex = /\/video\/([^/]+)/;
+  const tubeArchivistMatch = url.match(tubeArchivistRegex);
+  if (tubeArchivistMatch) {
+    return tubeArchivistMatch[1];
+  }
+
+  // If not a TubeArchivist URL, check for YouTube URL
+  const youtubeRegex = new RegExp(
     '(?:youtube(?:-nocookie)?.com/(?:[^/]+/.+/*|(?:v|e(?:mbed)?|shorts)?/|/*.*[?&]v=)|youtu.be/|^)([a-zA-Z0-9_-]{11})',
     'i',
   );
-  const match = url.match(regex);
-  if (match) {
-    return match[1];
+  const youtubeMatch = url.match(youtubeRegex);
+  if (youtubeMatch) {
+    return youtubeMatch[1];
   }
-  return '';
+
+  // If it's neither a TubeArchivist nor a YouTube URL, return the input as is
+  // (assuming it might be a direct video ID)
+  return url;
 }
 
 export function replaceIllegalFileNameCharacters(text: string) {
