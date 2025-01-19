@@ -5,6 +5,7 @@ import { convertYouTubeVideoDurationToMinutes, generateYoutubeVideoIframe, remov
 import { YoutubeTranscript } from '../helpers/YoutubeTranscript';
 import { GoogleYoutubeApi } from 'apis/GoogleYoutubeApi';
 import { Summarizer } from 'utils/Summarizer';
+import { requestUrl } from 'obsidian';
 
 export class YoutubeNote {
   googleYoutubeApi: GoogleYoutubeApi;
@@ -48,11 +49,12 @@ export class YoutubeNote {
     try {
       new Notice(`Creating note for YouTube video: ${this.videoId}`);
 
+      // Fetch video info and transcript in parallel
       const [googleYoutubeResponse, transcript] = await Promise.all([
         this.googleYoutubeApi.getVideoInfos(this.videoId),
         this.getTranscript()
       ]);
-
+      
       this.caption = transcript;
 
       if (this.plugin.settings.summary === 'true' && this.caption && this.caption.trim() !== '') {
@@ -103,6 +105,23 @@ export class YoutubeNote {
         throw new Error('Video ID is undefined or empty');
       }
 
+      if (this.plugin.settings.useYt2doc) {
+        const yt2docUrl = `${this.plugin.settings.yt2docBaseUrl}/transcribe?video_url=https://www.youtube.com/watch?v=${this.videoId}`;
+        const response = await requestUrl({
+          url: yt2docUrl,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.json.status === 'success') {
+          return response.json.content.rendered_transcript;
+        } else {
+          throw new Error('Failed to retrieve transcript from yt2doc');
+        }
+      }
+
       const transcript = await YoutubeTranscript.fetchTranscript(this.videoId);
 
       if (!transcript || transcript.length === 0) {
@@ -114,7 +133,7 @@ export class YoutubeNote {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       new Notice('Error fetching transcript: ' + errorMessage);
-      return '';
+      throw new Error('Failed to fetch transcript: ' + errorMessage);
     }
   }
 
@@ -123,8 +142,9 @@ export class YoutubeNote {
       const summary = await this.summarizer.summarize(this.caption);
       return summary;
     } catch (error) {
-      new Notice(`Error generating summary: ${error instanceof Error ? error.message : String(error)}`);
-      return '';
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      new Notice(`Error generating summary: ${errorMessage}`);
+      throw new Error('Failed to generate summary: ' + errorMessage);
     }
   }
 

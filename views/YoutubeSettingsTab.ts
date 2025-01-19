@@ -147,5 +147,32 @@ export class YouTubeSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    containerEl.createEl('h2', { text: 'yt2doc Settings' });
+
+    new Setting(containerEl)
+      .setName('Use yt2doc')
+      .setDesc('Enable the use of yt2doc for caption retrieval')
+      .addToggle(toggle =>
+        toggle
+          .setValue(this.plugin.settings.useYt2doc)
+          .onChange(async (value) => {
+            this.plugin.settings.useYt2doc = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName('yt2doc Base URL')
+      .setDesc('Base URL for the yt2doc API (e.g., http://yt2doc-api.example.com)')
+      .addText(text =>
+        text
+          .setPlaceholder('yt2doc Base URL')
+          .setValue(this.plugin.settings.yt2docBaseUrl)
+          .onChange(async value => {
+            this.plugin.settings.yt2docBaseUrl = value.replace(/\/+$/, "");
+            await this.plugin.saveSettings();
+          }),
+      );
   }
 }
