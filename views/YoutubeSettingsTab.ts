@@ -148,29 +148,29 @@ export class YouTubeSettingTab extends PluginSettingTab {
           })
       );
 
-    containerEl.createEl('h2', { text: 'yt2doc Settings' });
+    containerEl.createEl('h2', { text: 'SmartTranscripts Settings' });
 
     new Setting(containerEl)
-      .setName('Use yt2doc')
-      .setDesc('Enable the use of yt2doc for caption retrieval')
+      .setName('Use SmartTranscripts')
+      .setDesc('Enable the use of SmartTranscripts for caption enhancing')
       .addToggle(toggle =>
         toggle
-          .setValue(this.plugin.settings.useYt2doc)
+          .setValue(this.plugin.settings.useSmartTranscripts)
           .onChange(async (value) => {
-            this.plugin.settings.useYt2doc = value;
+            this.plugin.settings.useSmartTranscripts = value;
             await this.plugin.saveSettings();
           })
       );
 
     new Setting(containerEl)
-      .setName('yt2doc Base URL')
-      .setDesc('Base URL for the yt2doc API (e.g., http://yt2doc-api.example.com)')
+      .setName('SmartTranscripts Base URL')
+      .setDesc('Base URL for the SmartTranscripts API (e.g., http://smart-transcripts.example.com)')
       .addText(text =>
         text
-          .setPlaceholder('yt2doc Base URL')
-          .setValue(this.plugin.settings.yt2docBaseUrl)
+          .setPlaceholder('SmartTranscripts Base URL')
+          .setValue(this.plugin.settings.smartTranscriptsBaseUrl)
           .onChange(async value => {
-            this.plugin.settings.yt2docBaseUrl = value.replace(/\/+$/, "");
+            this.plugin.settings.smartTranscriptsBaseUrl = value.replace(/\/+$/, "");
             await this.plugin.saveSettings();
           }),
       );

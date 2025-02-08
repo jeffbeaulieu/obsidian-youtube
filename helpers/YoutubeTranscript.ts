@@ -28,6 +28,53 @@ export interface TranscriptResponse {
  */
 export class YoutubeTranscript {
   /**
+   * Convert seconds to SRT timestamp format (HH:MM:SS,mmm)
+   * @param seconds Number of seconds
+   * @returns Formatted timestamp string
+   */
+  private static secondsToSrtTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    const milliseconds = Math.floor((seconds % 1) * 1000);
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')},${milliseconds.toString().padStart(3, '0')}`;
+  }
+
+  /**
+   * Fetch transcript and convert to SRT format
+   * @param videoId Video url or video identifier
+   * @param config Get transcript in another country and language ISO
+   */
+  public static async fetchTranscriptAsSRT(
+    videoId: string,
+    config?: TranscriptConfig
+  ): Promise<string> {
+    const transcript = await this.fetchTranscript(videoId, config);
+    if (!transcript || transcript.length === 0) {
+      throw new YoutubeTranscriptError('No transcript available');
+    }
+
+    return transcript.map((item, index) => {
+      const startTime = this.secondsToSrtTime(item.offset);
+      const endTime = this.secondsToSrtTime(item.offset + item.duration);
+      // Handle text decoding more safely
+      const decodedText = item.text
+        .replace(/\+/g, ' ') // Replace + with space first
+        .replace(/%([0-9A-F]{2})/gi, (_, p1) => String.fromCharCode(parseInt(p1, 16))) // Handle percent encoding
+        .replace(/&#(\d+);/g, (_, p1) => String.fromCharCode(parseInt(p1, 10))) // Handle HTML entities
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      // Ensure proper SRT format with double newline between entries
+      return `${index + 1}\n${startTime} --> ${endTime}\n${decodedText}\n\n`;
+    }).join('').trim();
+  }
+
+  /**
    * Fetch transcript from YTB Video
    * @param videoId Video url or video identifier
    * @param config Get transcript in another country and language ISO

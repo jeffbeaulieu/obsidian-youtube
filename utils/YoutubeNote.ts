@@ -105,20 +105,50 @@ export class YoutubeNote {
         throw new Error('Video ID is undefined or empty');
       }
 
-      if (this.plugin.settings.useYt2doc) {
-        const yt2docUrl = `${this.plugin.settings.yt2docBaseUrl}/transcribe?video_url=https://www.youtube.com/watch?v=${this.videoId}`;
+      if (this.plugin.settings.useSmartTranscripts) {
+        // Get transcript segments
+        const transcriptSegments = await YoutubeTranscript.fetchTranscript(this.videoId);
+        if (!transcriptSegments) {
+          throw new Error('Failed to fetch transcript segments');
+        }
+        
+        // Send to SmartTranscripts
+        const smartTranscriptsBaseUrl = `${this.plugin.settings.smartTranscriptsBaseUrl}/process`;
+        
+        const rawTranscript = transcriptSegments.map(segment => segment.text).join(' ');
+
+        // Log request for debugging
+        console.log('Sending request to SmartTranscripts:', {
+          url: smartTranscriptsBaseUrl,
+          text: rawTranscript,
+          model: this.plugin.settings.openAIModel,
+          openai_api_key: this.plugin.settings.openAIAPIKey,
+          openai_base_url: this.plugin.settings.openaiBasePath
+        });
+
         const response = await requestUrl({
-          url: yt2docUrl,
+          url: smartTranscriptsBaseUrl,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          body: JSON.stringify({
+            title: `YouTube Transcript - ${this.videoId}`,
+            text: rawTranscript,
+            language: "en",
+            openai_api_key: this.plugin.settings.openAIAPIKey,
+            openai_base_url: this.plugin.settings.openaiBasePath,
+            model: this.plugin.settings.openAIModel
+          })
         });
+
+        // Log response for debugging
+        console.log('SmartTranscripts response:', response);
         
-        if (response.json.status === 'success') {
-          return response.json.content.rendered_transcript;
+        if (response.status === 200 && response.json.markdown) {
+          return response.json.markdown;
         } else {
-          throw new Error('Failed to retrieve transcript from yt2doc');
+          throw new Error(`Failed to retrieve transcript from SmartTranscripts: ${response.status} - Missing markdown field`);
         }
       }
 

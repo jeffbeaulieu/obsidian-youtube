@@ -9,8 +9,8 @@ export interface ObsidianYoutubePluginSettings {
   openAIModel: string;
   summaryPrompt: string;
   tubeArchivistBaseUrl: string;
-  useYt2doc: boolean;
-  yt2docBaseUrl: string;
+  useSmartTranscripts: boolean;
+  smartTranscriptsBaseUrl: string;
 }
 
 export const DEFAULT_SETTINGS: ObsidianYoutubePluginSettings = {
@@ -24,6 +24,6 @@ export const DEFAULT_SETTINGS: ObsidianYoutubePluginSettings = {
   openAIModel: 'gpt-4o',
   summaryPrompt: "You are ChatGPT, a large language model trained by OpenAI. Follow the user's instructions carefully. Respond using markdown. Summarize the following capture from a youtube video, extractiong  ideas, strategies, and thinking from this video transcript: \n\n",
   tubeArchivistBaseUrl: '',
-  useYt2doc: false,
-  yt2docBaseUrl: '',
+  useSmartTranscripts: false,
+  smartTranscriptsBaseUrl: '',
 };
